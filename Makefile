@@ -3,7 +3,7 @@ CFLAGS = -Wall -g
 LDFLAGS = 
 
 # Source Files
-SRC = asynch_reverse_proxy.c cache.c
+SRC = asynch_reverse_proxy.c cache.c load_balancer.c
 OBJ = $(SRC:.c=.o)
 EXEC = asynch_reverse_proxy
 

@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <sys/epoll.h>
 #include "cache.h"
+#include "load_balancer.h"
 
 #define MAX_BUFFER_SIZE 1024
 #define MAX_EVENTS 10
@@ -18,7 +19,8 @@ void send_response(int client_sock, const char *response, int is_head, int respo
 
 // 전역 변수로 설정 값 선언
 int PROXY_PORT;
-char TARGET_SERVER[256];
+char TARGET_SERVER1[256];
+char TARGET_SERVER2[256];
 int TARGET_PORT;
 int CACHE_ENABLED;
 
@@ -36,9 +38,12 @@ void load_config(const char *config_file) {
         if (sscanf(line, "%255[^=]=%255[^\n]", key, value) == 2) {
             if (strcmp(key, "PROXY_PORT") == 0) {
                 PROXY_PORT = atoi(value);
-            } else if (strcmp(key, "TARGET_SERVER") == 0) {
-                strncpy(TARGET_SERVER, value, sizeof(TARGET_SERVER) - 1);
-                TARGET_SERVER[sizeof(TARGET_SERVER) - 1] = '\0';  // 안전하게 NULL 종료
+            } else if (strcmp(key, "TARGET_SERVER1") == 0) {
+                strncpy(TARGET_SERVER1, value, sizeof(TARGET_SERVER1) - 1);
+                TARGET_SERVER1[sizeof(TARGET_SERVER1) - 1] = '\0';  // 안전하게 NULL 종료
+            } else if (strcmp(key, "TARGET_SERVER2") == 0) {
+                strncpy(TARGET_SERVER2, value, sizeof(TARGET_SERVER2) - 1);
+                TARGET_SERVER2[sizeof(TARGET_SERVER2) - 1] = '\0';  // 안전하게 NULL 종료
             } else if (strcmp(key, "TARGET_PORT") == 0) {
                 TARGET_PORT = atoi(value);
             } else if (strcmp(key, "CACHE_ENABLED") == 0) {
@@ -57,6 +62,13 @@ int main() {
 
     // 설정 파일 읽기
     load_config("reverse_proxy.conf");
+
+    httpserver servers[] = {
+        {"10.198.138.212", 12345, 3},
+        {"10.198.138.213", 12345, 10}
+    };
+    init_http_servers(servers, 2);
+    printf("Selected ip and port : %s, %d\n", servers[0].ip, servers[0].port);
 
     // 캐시 초기화
     if (CACHE_ENABLED) {
@@ -170,6 +182,9 @@ void *handle_request(void *client_sock_ptr) {
         return NULL;
     }
 
+    httpserver server = round_robin();  // 로드밸런서 호출
+    printf("Forwarding to server: %s:%d\n", server.ip, server.port);
+
     // 디버깅: 파싱된 결과 출력
     printf("Parsed method: %s, URL: %s, Protocol: %s\n", method, url, protocol);
 
@@ -200,8 +215,8 @@ void *handle_request(void *client_sock_ptr) {
 
         memset(&target_addr, 0, sizeof(target_addr));
         target_addr.sin_family = AF_INET;
-        target_addr.sin_port = htons(TARGET_PORT);
-        inet_pton(AF_INET, TARGET_SERVER, &target_addr.sin_addr);
+        target_addr.sin_port = htons(server.port);
+        inet_pton(AF_INET, server.ip, &target_addr.sin_addr);
 
         if (connect(server_sock, (struct sockaddr *)&target_addr, sizeof(target_addr)) < 0) {
             perror("Connection failed");
@@ -236,7 +251,7 @@ void *handle_request(void *client_sock_ptr) {
             }
 
             // 클라이언트로 응답 전송
-	    send_response(client_sock, response_buffer, strcmp(method, "HEAD") == 0, response_size);
+       send_response(client_sock, response_buffer, strcmp(method, "HEAD") == 0, response_size);
 
         }
 
@@ -272,4 +287,3 @@ void send_response(int client_sock, const char *response, int is_head, int respo
         }
     }
 }
-
