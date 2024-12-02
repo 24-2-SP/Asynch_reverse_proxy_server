@@ -9,6 +9,7 @@ typedef struct httpserver {
     int port;
     int weight;
     int active_connections;
+    int is_healthy;
 } httpserver;
 
 // 초기화 함수

@@ -19,6 +19,7 @@ void init_http_servers(httpserver servers[], int count) {
         strcpy(http_servers[i].ip, servers[i].ip);
         http_servers[i].port = servers[i].port;
         http_servers[i].weight = servers[i].weight;
+        http_servers[i].is_healthy = 1;
     }
 
     http_server_count = count;
