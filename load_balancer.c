@@ -20,6 +20,7 @@ void init_http_servers(httpserver servers[], int count) {
         http_servers[i].port = servers[i].port;
         http_servers[i].weight = servers[i].weight;
         http_servers[i].is_healthy = 1;
+        http_servers[i].current_weight = 0;
     }
 
     http_server_count = count;
@@ -38,30 +39,30 @@ httpserver round_robin() {
     return server;
 }
 
-httpserver weighted_round_robin() {
-    if(http_server_count == 0) {
-        fprintf(stderr, "사용 가능한 http 서버가 없습니다.\n");
-        httpserver empty = {"", 0, 0};
-        return empty;
-    }
-
-    int total_weight = 0;
-    for (int i = 0; i < http_server_count; i++) {
-        total_weight += http_servers[i].weight;
-    }
-
-    int random = rand() % total_weight;
-    int weight_sum = 0;
-    for (int i = 0; i < http_server_count; i++) {
-        weight_sum += http_servers[i].weight;
-        if (random < weight_sum) {
-            return http_servers[i];
-        }
-    }
-
-    httpserver empty = {"", 0, 0};
-    return empty;
-}
+//httpserver weighted_round_robin() {
+//    if(http_server_count == 0) {
+//        fprintf(stderr, "사용 가능한 http 서버가 없습니다.\n");
+//        httpserver empty = {"", 0, 0};
+//        return empty;
+//    }
+//
+//    int total_weight = 0;
+//    for (int i = 0; i < http_server_count; i++) {
+//        total_weight += http_servers[i].weight;
+//    }
+//
+//    int random = rand() % total_weight;
+//    int weight_sum = 0;
+//    for (int i = 0; i < http_server_count; i++) {
+//        weight_sum += http_servers[i].weight;
+//        if (random < weight_sum) {
+//            return http_servers[i];
+//        }
+//    }
+//
+//    httpserver empty = {"", 0, 0};
+//    return empty;
+//}
 
 httpserver least_connection() {
     if(http_server_count == 0) {
@@ -91,9 +92,9 @@ httpserver (*load_balancer_select(int mode))() {
     switch (mode) {
         case 0:
             return round_robin;
+//        case 1:
+//            return weighted_round_robin;
         case 1:
-            return weighted_round_robin;
-        case 2:
             return least_connection;
         default:
             fprintf(stderr, "Invalid load balancer mode!\n");

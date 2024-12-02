@@ -90,23 +90,30 @@ void *health_check(void *arg) {
 }
 
 // 로드 밸런서 수정: Health Check 기반 선택
-httpserver select_server() {
-    int selected_index = -1;
+httpserver weighted_round_robin() {
+    int total_weight = 0;
+    httpserver *selected_server = NULL;
 
-    // 가용한 서버 중에서 선택
     for (int i = 0; i < server_count; i++) {
         if (servers[i].is_healthy) {
-            selected_index = i;
-            break;
+            total_weight += servers[i].weight;
+            servers[i].current_weight += servers[i].weight;
+
+            if (selected_server == NULL || servers[i].current_weight > selected_server->current_weight) {
+                selected_server = &servers[i];
+            }
         }
     }
 
-    if (selected_index == -1) {
+    if (selected_server == NULL) {
         fprintf(stderr, "No healthy servers available\n");
         exit(EXIT_FAILURE);
     }
 
-    return servers[selected_index];
+    // 선택된 서버의 가중치를 감소
+    selected_server->current_weight -= total_weight;
+
+    return *selected_server;
 }
 
 // 설정 파일에서 값을 읽어오는 함수
@@ -147,7 +154,7 @@ int main() {
     // 설정 파일 읽기
     load_config("reverse_proxy.conf");
 
-    init_http_servers(servers, server_count);
+    init_http_servers(servers, 2);
 
         pthread_t health_thread;
     if (pthread_create(&health_thread, NULL, health_check, NULL) != 0) {
@@ -313,7 +320,7 @@ void *handle_request(void *client_sock_ptr) {
         return NULL;
     }
 
-    httpserver server = select_server();  // 로드밸런서 호출
+    httpserver server = weighted_round_robin();  // 로드밸런서 호출
     printf("Forwarding to server: %s:%d\n", server.ip, server.port);
 
     // 디버깅: 파싱된 결과 출력
