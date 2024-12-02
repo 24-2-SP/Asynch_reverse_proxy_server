@@ -10,7 +10,7 @@
 #include "cache.h"
 #include "load_balancer.h"
 
-#define MAX_BUFFER_SIZE 1024
+#define MAX_BUFFER_SIZE 655036
 #define MAX_EVENTS 100
 #define THREAD_POOL_SIZE 8  // 스레드 풀 크기
 #define QUEUE_SIZE 10000      // 작업 큐 크기
@@ -337,16 +337,22 @@ void *handle_request(void *client_sock_ptr) {
     int header_size = 0;
     char header_buffer[MAX_BUFFER_SIZE] = {0};
     int newline_count = 0;
+        int max_newline = 4;
+
         if (CACHE_ENABLED && cache_lookup(url, cached_data)) {
         // 캐시 히트 메시지 출력
         printf("Cache hit for URL: %s\n\n\n", url);
+
+                if (strstr(cached_data, "Transfer-Encoding: chunked") != NULL) {
+                        max_newline = 5; // chunked가 있으면 \n 5개까지 찾기
+                        printf("this is chuncked\n");
+                }
 
         for (int i = 0; i < sizeof(cached_data); i++) {
             header_size++;
             if (cached_data[i] == '\n') {
                 newline_count++;
-                if (newline_count == 4) {
-                    // 4번째 '\n'까지의 크기를 반환
+                if (newline_count == max_newline) {
                     break;
                 }
             }
@@ -391,24 +397,60 @@ void *handle_request(void *client_sock_ptr) {
         // 응답 수신 및 스트리밍 방식으로 클라이언트로 전달
         ssize_t bytes_received;
         char response_buffer[MAX_BUFFER_SIZE] = {0};
-                int response_size = 0;
+        int response_size = 0;
+
+                if(strstr(url, "/jpg") != NULL) {
+                        size_t chunk_size;
+
+                        while (1) {
+                                // 청크 헤더 읽기 (청크 크기)
+                                bytes_received = read(server_sock, buffer, MAX_BUFFER_SIZE);
+                                if (bytes_received <= 0) {
+                                        if (bytes_received == 0) {
+                                                printf("Connection closed by server.\n");
+                                        } else {
+                                                perror("Read failed");
+                                        }
+                                        break;
+                                }
+                                buffer[bytes_received] = '\0';
+
+                                // 청크 크기 파싱
+                                sscanf(buffer, "%zx", &chunk_size);
+                                if (chunk_size == 0) {
+                                        printf("End of chunked transfer.\n");
+                                        break;
+                                }
+
+                                // 청크 데이터 읽기
+                                char *data_start = strstr(buffer, "\r\n") + 2; // 청크 헤더 이후 데이터 시작
+                                fwrite(data_start, 1, chunk_size, stdout);
+
+                                // 다음 청크로 이동
+                        }
+
+                } else {
 
         while ((bytes_received = read(server_sock, response_buffer + response_size, sizeof(response_buffer) - response_size)) > 0) {
             response_size += bytes_received;
         }
 
-                for (int i = 0; i < sizeof(response_buffer); i++) {
-            header_size++;
-            if (response_buffer[i] == '\n') {
-                newline_count++;
-                if (newline_count == 4) {
-                    // 4번째 '\n'까지의 크기를 반환
-                    break;
-                }
-            }
-        }
+                if (strstr(response_buffer, "Transfer-Encoding: chunked") != NULL) {
+             max_newline = 5; // chunked가 있으면 \n 5개까지 찾기
+                        printf("this is chuncked\n");
+         }
 
-                // 헤더와 본문을 분리
+         for (int i = 0; i < sizeof(response_buffer); i++) {
+             header_size++;
+             if (response_buffer[i] == '\n') {
+                 newline_count++;
+                 if (newline_count == max_newline) {
+                     break;
+                 }
+             }
+         }
+
+        // 헤더와 본문을 분리
         memcpy(header_buffer, response_buffer, header_size);
 
         if (bytes_received < 0) {
@@ -424,7 +466,7 @@ void *handle_request(void *client_sock_ptr) {
        send_response(client_sock, header_buffer, response_buffer + header_size, strcmp(method, "HEAD") == 0, response_size - header_size);
 
         }
-
+                }
         close(server_sock);
     }
 
