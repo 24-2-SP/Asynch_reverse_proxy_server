@@ -22,8 +22,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9f31f6f1-8293-42b1-a9fe-80d15f458bfa" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/health_check/health_check.c" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/health_check/health_check.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/asynch_reverse_proxy.c" beforeDir="false" afterPath="$PROJECT_DIR$/asynch_reverse_proxy.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cache.c" beforeDir="false" afterPath="$PROJECT_DIR$/cache/cache.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cache.h" beforeDir="false" afterPath="$PROJECT_DIR$/cache/cache.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/load_balancer.c" beforeDir="false" afterPath="$PROJECT_DIR$/load_balancer/load_balancer.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/load_balancer.h" beforeDir="false" afterPath="$PROJECT_DIR$/load_balancer/load_balancer.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -74,10 +80,10 @@
     <option name="minorVersion" value="3" />
     <option name="productBranch" value="Classic" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 2
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 2
+}</component>
   <component name="ProjectId" id="2pf6Y7Y8PzJf0BcmtGp6TgssQdd" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -93,6 +99,7 @@
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "git-widget-placeholder": "main",
+    "last_opened_file_path": "D:/CBNU/24-2/Server Programming/project/Synch_reverse_proxy_server",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -101,10 +108,16 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\CBNU\24-2\Server Programming\project\Asynch_reverse_proxy_server\load_balancer" />
+      <recent name="D:\CBNU\24-2\Server Programming\project\Asynch_reverse_proxy_server\cache" />
+    </key>
+  </component>
   <component name="RunManager">
-    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
-        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
   </component>
@@ -116,7 +129,8 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1733144829927</updated>
-      <workItem from="1733144833594" duration="5598000" />
+      <workItem from="1733144833594" duration="8291000" />
+      <workItem from="1733198742264" duration="5588000" />
     </task>
     <servers />
   </component>

@@ -3,7 +3,7 @@
 #include <string.h>
 #include "load_balancer.h"
 
-#define MAX_HTTP_SERVERS 2
+#define MAX_HTTP_SERVERS 10
 
 static httpserver http_servers[MAX_HTTP_SERVERS];
 static int http_server_count = 0;
@@ -39,30 +39,31 @@ httpserver round_robin() {
     return server;
 }
 
-//httpserver weighted_round_robin() {
-//    if(http_server_count == 0) {
-//        fprintf(stderr, "사용 가능한 http 서버가 없습니다.\n");
-//        httpserver empty = {"", 0, 0};
-//        return empty;
-//    }
-//
-//    int total_weight = 0;
-//    for (int i = 0; i < http_server_count; i++) {
-//        total_weight += http_servers[i].weight;
-//    }
-//
-//    int random = rand() % total_weight;
-//    int weight_sum = 0;
-//    for (int i = 0; i < http_server_count; i++) {
-//        weight_sum += http_servers[i].weight;
-//        if (random < weight_sum) {
-//            return http_servers[i];
-//        }
-//    }
-//
-//    httpserver empty = {"", 0, 0};
-//    return empty;
-//}
+httpserver weighted_round_robin() {
+    int total_weight = 0;
+    httpserver *selected_server = NULL;
+
+    for (int i = 0; i < http_server_count; i++) {
+        if (http_servers[i].is_healthy) {
+            total_weight += http_servers[i].weight;
+            http_servers[i].current_weight += http_servers[i].weight;
+
+            if (selected_server == NULL || http_servers[i].current_weight > selected_server->current_weight) {
+                selected_server = &http_servers[i];
+            }
+        }
+    }
+
+    if (selected_server == NULL) {
+        fprintf(stderr, "No healthy servers available\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // 선택된 서버의 가중치를 감소
+    selected_server->current_weight -= total_weight;
+
+    return *selected_server;
+}
 
 httpserver least_connection() {
     if(http_server_count == 0) {
@@ -92,9 +93,9 @@ httpserver (*load_balancer_select(int mode))() {
     switch (mode) {
         case 0:
             return round_robin;
-//        case 1:
-//            return weighted_round_robin;
         case 1:
+            return weighted_round_robin;
+        case 2:
             return least_connection;
         default:
             fprintf(stderr, "Invalid load balancer mode!\n");
