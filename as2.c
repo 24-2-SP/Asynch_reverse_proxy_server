@@ -201,7 +201,7 @@ int main()
     while (1)
     {
         // 이벤트 대기
-        int nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, 5000);
+        int nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, 1000);
         if (nfds == -1)
         {
             perror("epoll_wait failed");
